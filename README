@@ -4,7 +4,7 @@
 動作環境	ruby 1.9
 著 作	2011 PSI
 ライセンス	GPLv3（添付してあります）
-サイト	https://github.com/ledyba/ShocoCal_Renamer
+サイト	https://github.com/ledyba/ShoboCal_Renamer
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 アニメ録画foltia(http://www.dcc-jpl.com/soft/foltia/)では、以下のような形式の
@@ -24,7 +24,7 @@ foltia以外でも使えるかもしれませんね。
 
 *ダウンロード
 githubからDLしてください。
-https://github.com/ledyba/ShocoCal_Renamer
+https://github.com/ledyba/ShoboCal_Renamer
 
 *オプションの指定
 面倒なのでhelpをコピー！（ぉ
