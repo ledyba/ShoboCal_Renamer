@@ -1,65 +1,65 @@
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-�\�t�g��	ShoboCal_Renamer
-�o�[�W����	1.0 (2011/04/28)
-�����	ruby 1.9
-�� ��	2011 PSI
-���C�Z���X	GPLv3�i�Y�t���Ă���܂��j
-�T�C�g	https://github.com/ledyba/ShocoCal_Renamer
+ソフト名	ShoboCal_Renamer
+バージョン	1.0 (2011/04/28)
+動作環境	ruby 1.9
+著 作	2011 PSI
+ライセンス	GPLv3（添付してあります）
+サイト	https://github.com/ledyba/ShocoCal_Renamer
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-�A�j���^��foltia(http://www.dcc-jpl.com/soft/foltia/)�ł́A�ȉ��̂悤�Ȍ`����
-�t�@�C�����Ř^�悵���A�j���̃t�@�C�����Ǘ����Ă��܂��F
+アニメ録画foltia(http://www.dcc-jpl.com/soft/foltia/)では、以下のような形式の
+ファイル名で録画したアニメのファイルを管理しています：
 ---
 1725-35-20100607-1730.m2t
-�i����ڂ��J�����_�̔ԑgID�j-�i�b���j-�i���t�j-�i���ԁj.�g���q
+（しょぼいカレンダの番組ID）-（話数）-（日付）-（時間）.拡張子
 ---
-���̃t�@�C�����̏����͋@�B���������ɂ͊ȒP�Ȃ̂ł����A
-�l�Ԃ��ǂނ̂͂�����Ƃ���ǂ��ł��i�����āA�ԑgID1725���ĉ��Ȃ̂��m��Ȃ����c�j�B
-�Ƃ����킯�ŁA���̃\�t�g�ł͂���ڂ��J�����_�[��DB�ɖ₢�����A����Ȋ����̖��O�Ƀ��l�[�����Ă���܂��F
+このファイル名の書式は機械が扱う分には簡単なのですが、
+人間が読むのはちょっとしんどいです（だって、番組ID1725って何なのか知らないし…）。
+というわけで、このソフトではしょぼいカレンダーのDBに問い合せ、こんな感じの名前にリネームしてくれます：
 ---
-���ɂ�܂�T�� �L���~������ ��35�b �_�u���ł��C���I�n�O�n�O���[�_�[�I�H (20100607-1730).m2t
+あにゃまる探偵 キルミンずぅ 第35話 ダブルでお任せ！ハグハグリーダー！？ (20100607-1730).m2t
 ||<
-�@�t�@�C�����̏����͓��́^�o�͂Ƃ��Ɏ��R�ɂ����ƊȒP�ɐݒ�\�ł��̂ŁA
-foltia�ȊO�ł��g���邩������܂���ˁB
+　ファイル名の書式は入力／出力ともに自由にかつ割と簡単に設定可能ですので、
+foltia以外でも使えるかもしれませんね。
 
-*�_�E�����[�h
-github����DL���Ă��������B
+*ダウンロード
+githubからDLしてください。
 https://github.com/ledyba/ShocoCal_Renamer
 
-*�I�v�V�����̎w��
-�ʓ|�Ȃ̂�help���R�s�[�I�i��
+*オプションの指定
+面倒なのでhelpをコピー！（ぉ
 >||
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ShoboCal_Renamer 1.0 (2011/04/28)
                    written by PSI ( http://ledyba.ddo.jp/ )
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 usage: ruby shobo_cal.rb [options] files or directories
-    -i, --in_format FORMAT           ���̓t�@�C���̃t�H�[�}�b�g���w�肵�Ă��������B
-    -o, --out_format FORMAT          �o�̓t�@�C���̃t�H�[�}�b�g���w�肵�Ă��������B
-    -d, --dry-run                    �t�@�C���������ۂɂ͏��������܂���B
-    -r, --recursive                  �ċA�I�Ɏ��s���܂��B
-    -e, --except FILENAME            �w�肵���t�@�C���͏��O���܂��B
-    -y                               �㏑�����K�v�ȍۂɁA���̎|�𕷂��܂���B
-    -h, --help                       ���̃��b�Z�[�W��\�����܂�
-        --version                    �o�[�W������\�����܂��B
+    -i, --in_format FORMAT           入力ファイルのフォーマットを指定してください。
+    -o, --out_format FORMAT          出力ファイルのフォーマットを指定してください。
+    -d, --dry-run                    ファイル名を実際には書き換えません。
+    -r, --recursive                  再帰的に実行します。
+    -e, --except FILENAME            指定したファイルは除外します。
+    -y                               上書きが必要な際に、その旨を聞きません。
+    -h, --help                       このメッセージを表示します
+        --version                    バージョンを表示します。
 ||<
-�@����Ȋ����Ŏg���܂��B
+　こんな感じで使えます。
 >||
-�J�����g�t�H���_�̃t�@�C����S�ď���
+カレントフォルダのファイルを全て処理
 > ruby shobo_cal.rb .
-mp4�ɕϊ����Ă���̂��������������B
+mp4に変換してあるのだけ処理したい。
 > ruby shobo_cal.rb *.mp4
-���̓t�@�C�����A�o�̓t�@�C�����̃t�H�[�}�b�g���w�肵�āA�J�����g�t�H���_�̃t�@�C������������B
+入力ファイル名、出力ファイル名のフォーマットを指定して、カレントフォルダのファイルを処理する。
 > ruby shobo_cal.rb \
 -i %tid%-%stid%-%date%-%time%.%ext% \
--o %title% ��%stid%�b %subtitle% (%date%-%time%).%ext% \
+-o %title% 第%stid%話 %subtitle% (%date%-%time%).%ext% \
 .
 ||<
 
-*�t�@�C�����̃t�H�[�}�b�g�ɂ���
-�@���̓t�@�C������"%�L�[���[�h%"�ň͂񂾕����̐�����ǂݎ��A
-�o�̓t�@�C�����̑Ή�����"%�L�[���[�h%"�ɏ����o���܂��B��{�I�ɐ�������ł��B
-�@�������A�ȉ��̗�O������܂��B
-�E���̓t�@�C������%tid%�Ŏw�肵���ԍ��̃A�j���̃^�C�g�����A�o�͑���%title%�Ƃ��Ďg���܂��B
-�E���̓t�@�C������%stid%�Ŏw�肵���ԍ��̃A�j���̃T�u�^�C�g�����A�o�͑���%subtitle%�Ƃ��Ďg���܂��B
-�E%ext%�͓���ŁA�����ȊO�ł��󂯕t���܂��B�g���q�p�ł��B
+*ファイル名のフォーマットについて
+　入力ファイル内の"%キーワード%"で囲んだ部分の数字を読み取り、
+出力ファイル名の対応する"%キーワード%"に書き出します。基本的に数字縛りです。
+　ただし、以下の例外があります。
+・入力ファイル名で%tid%で指定した番号のアニメのタイトルを、出力側で%title%として使えます。
+・入力ファイル名で%stid%で指定した番号のアニメのサブタイトルを、出力側で%subtitle%として使えます。
+・%ext%は特殊で、数字以外でも受け付けます。拡張子用です。
