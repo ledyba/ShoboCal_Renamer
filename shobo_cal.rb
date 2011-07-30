@@ -151,8 +151,14 @@ def rename(info, filename)
 
 	tid = file_info["tid"].to_i;
 	stid = file_info["stid"].to_i
+	
 	title, subtitle = TitleResolver.getInstance.getTitleSet(tid,stid)
-	digits_of_stid = 1+Math::log10(TitleResolver.getInstance.getNumberOfSubTitles(tid)).to_i #最大の話数は何桁になる？
+	number_of_subtitles = TitleResolver.getInstance.getNumberOfSubTitles(tid);
+	unless number_of_subtitles > 0
+		number_of_subtitles = 1000 #タイトル数が分からない場合はとりあえず大きめ。
+	end
+
+	digits_of_stid = 1+Math::log10(number_of_subtitles).to_i #最大の話数は何桁になる？
 	file_info["stid"] = file_info["stid"].rjust([2,digits_of_stid].max,"0"); #話数のパディング←Vistaだとしなくてもうまくソート出来た気がするけど…
 
 	renamed_title = info[:out_format].format( file_info.merge({"title" => title, "subtitle" => subtitle}))
