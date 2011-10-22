@@ -22,12 +22,81 @@ require 'optparse'
 require 'open-uri'
 require 'rexml/document'
 require 'scanf'
+require 'rubygems'
+require 'sqlite3'
+
+FOLTIA_DB = "/server/data/foltia/foltia.sqlite"
+FOLTIA_ENCODING="EUC-JP"
+FOLTIA_EPG_SUBTITLE_MAX = 48
 
 SHOBOCAL_DB_URL="http://cal.syoboi.jp/db.php?Command=TitleLookup&TID=%d&Fields=Title,SubTitles"
 
+class DBHolder
+	def initialize()
+		@db = SQLite3::Database.new(FOLTIA_DB);
+	end
+	def getRaw
+		return @db
+	end
+	def close
+		@db.close
+		@@obj = nil
+	end
+	def self.getInstance()
+		unless defined?(@@obj)
+			@@obj = DBHolder.new
+		end
+		return @@obj;
+	end
+end
+
+class FileIndexRemover
+	def initialize()
+	end
+	def remove(filename)
+		DBHolder.getInstance.getRaw.execute("DELETE FROM foltia_m2pfiles WHERE m2pfilename = ?", filename.to_s)
+	end
+	
+	def self.getInstance()
+		unless defined?(@@obj)
+			@@obj = FileIndexRemover.new
+		end
+		return @@obj;
+	end
+end
+
+class EpgResolver
+	def initialize()
+		db = DBHolder.getInstance.getRaw
+		@SubTitles = Hash.new();
+		
+		station_hash = Hash.new
+		db.execute("select * from foltia_station") {|row|
+			station_hash[row[0].to_i] = row[9].to_i
+		}
+		db.execute("select * from foltia_subtitle where tid=0") {|row|
+			key = row[5].to_s+"-"+station_hash[row[2].to_i].to_s;
+			subtitle = row[4].force_encoding(FOLTIA_ENCODING).encode('UTF-8').tr('a-zA-Z!?:;/\|,*"><','ａ-ｚＡ-Ｚ！？：；／￥｜，＊');
+			@SubTitles[key] = subtitle;
+		}
+		@SubTitles.freeze
+	end
+	def getTitle(data, time, channel)
+		return @SubTitles[data.to_s+time.to_s+"-"+channel.to_s];
+	end
+
+	def self.getInstance()
+		unless defined?(@@obj)
+			@@obj = EpgResolver.new
+		end
+		return @@obj;
+	end
+end
+
 class Title
-	def initialize(title_number)
+	def initialize(db, title_number)
 		@SubTitles = Array.new;
+		@TitleNumber = title_number
 		uri = URI.parse(sprintf(SHOBOCAL_DB_URL,title_number));
 		@Title = sub_titles = REXML::Document.new(uri.read).elements['TitleLookupResponse/TitleItems/TitleItem/Title'].get_text.to_s;
 		sub_titles = REXML::Document.new(uri.read).elements['TitleLookupResponse/TitleItems/TitleItem/SubTitles'].get_text.to_s;
@@ -37,7 +106,6 @@ class Title
 			# ファイル名に使用できない文字を全角に変換しています。
 			@SubTitles[elm[0]] = elm[1].tr('a-zA-Z!?:;/\|,*"><','ａ-ｚＡ-Ｚ！？：；／￥｜，＊')
 		}
-		@SubTitles.freeze
 	end
 	
 	def getNumberOfSubTitles()
@@ -57,7 +125,7 @@ class TitleResolver
 	end
 	def check(title)
 		unless @TitleBank.has_key? title
-			@TitleBank[title] = Title.new(title)
+			@TitleBank[title] = Title.new(@DB, title)
 		end
 	end
 	protected :check
@@ -89,6 +157,7 @@ class Formatter
 	FormatPattern = /%(.*?)%/
 	ReplacePattern = {
 		"ext" => "(.+)",
+		"channel" => "(?:-(\\d+))?",
 	}
 	def initialize(format_str)
 		@idx_hash = Hash.new
@@ -128,7 +197,7 @@ end
 
 def getDefaultRunInfo
 	info = Hash.new
-	info[:in_format] = Formatter.new("%tid%-%stid%-%date%-%time%.%ext%");
+	info[:in_format] = Formatter.new("%tid%-%stid%-%date%-%time%%channel%.%ext%");
 	info[:out_format] = Formatter.new("%title% 第%stid%話 %subtitle% (%date%-%time%).%ext%");
 	info[:dry_run] = false;
 	info[:recursive] = false;
@@ -150,22 +219,32 @@ def rename(info, filename)
 	end
 
 	tid = file_info["tid"].to_i;
-	stid = file_info["stid"].to_i
-	
-	title, subtitle = TitleResolver.getInstance.getTitleSet(tid,stid)
-	number_of_subtitles = TitleResolver.getInstance.getNumberOfSubTitles(tid);
-	unless number_of_subtitles > 0
-		number_of_subtitles = 1000 #タイトル数が分からない場合はとりあえず大きめ。
+	if tid > 0
+		stid = file_info["stid"].to_i
+
+		title, subtitle = TitleResolver.getInstance.getTitleSet(tid,stid)
+		number_of_subtitles = TitleResolver.getInstance.getNumberOfSubTitles(tid);
+		unless number_of_subtitles > 0
+			number_of_subtitles = 1000 #タイトル数が分からない場合はとりあえず大きめ。
+		end
+
+		digits_of_stid = 1+Math::log10(number_of_subtitles).to_i #最大の話数は何桁になる？
+		file_info["stid"] = file_info["stid"].rjust([2,digits_of_stid].max,"0"); #話数のパディング←Vistaだとしなくてもうまくソート出来た気がするけど…
+
+		renamed_title = info[:out_format].format( file_info.merge({"title" => title, "subtitle" => subtitle}))
+	else
+		renamed_title = EpgResolver.getInstance.getTitle(file_info["date"],file_info["time"],file_info["channel"])
+		if renamed_title.size > FOLTIA_EPG_SUBTITLE_MAX
+			renamed_title = renamed_title[0..(FOLTIA_EPG_SUBTITLE_MAX-1)];
+		end
+		renamed_title = file_info["date"]+"-"+file_info["time"]+"-"+file_info["channel"]+" "+renamed_title+"."+file_info["ext"]
 	end
 
-	digits_of_stid = 1+Math::log10(number_of_subtitles).to_i #最大の話数は何桁になる？
-	file_info["stid"] = file_info["stid"].rjust([2,digits_of_stid].max,"0"); #話数のパディング←Vistaだとしなくてもうまくソート出来た気がするけど…
-
-	renamed_title = info[:out_format].format( file_info.merge({"title" => title, "subtitle" => subtitle}))
 	renamed_path = File::join(File::dirname(filename),renamed_title)
 	puts "\"#{filename}\" => \"#{renamed_path}\""
 	unless info[:dry_run]
 		if info[:dont_ask] || !FileTest.exist?(renamed_path)
+			FileIndexRemover.getInstance.remove(basename);
 			File::rename(filename, renamed_path)
 		else
 			accepted = false
@@ -176,6 +255,7 @@ def rename(info, filename)
 				accepted  = ( buf == "n" || buf == "y" )
 			end
 			if buf == "y"
+				FileIndexRemover.getInstance.remove(basename);
 				File::rename(filename, renamed_path)
 			end
 		end
