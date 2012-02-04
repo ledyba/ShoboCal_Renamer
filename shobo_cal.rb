@@ -31,6 +31,9 @@ FOLTIA_EPG_SUBTITLE_MAX = 48
 
 SHOBOCAL_DB_URL="http://cal.syoboi.jp/db.php?Command=TitleLookup&TID=%d&Fields=Title,SubTitles"
 
+FILENAME_FROM = 'a-zA-Z!?:;/\|,*"><'
+FILENAME_TO = 'ａ-ｚＡ-Ｚ！？：；／￥｜，＊'
+
 class DBHolder
 	def initialize()
 		@db = SQLite3::Database.new(FOLTIA_DB);
@@ -76,7 +79,7 @@ class EpgResolver
 		}
 		db.execute("select * from foltia_subtitle where tid=0") {|row|
 			key = row[5].to_s+"-"+station_hash[row[2].to_i].to_s;
-			subtitle = row[4].force_encoding(FOLTIA_ENCODING).encode('UTF-8').tr('a-zA-Z!?:;/\|,*"><','ａ-ｚＡ-Ｚ！？：；／￥｜，＊');
+			subtitle = row[4].force_encoding(FOLTIA_ENCODING).encode('UTF-8').tr(FILENAME_FROM, FILENAME_TO);
 			@SubTitles[key] = subtitle;
 		}
 		@SubTitles.freeze
@@ -104,7 +107,8 @@ class Title
 			elm = line.scanf("*%d*%s")
 			#FIXME: このやばいくらいに漂うバッドノウハウ感
 			# ファイル名に使用できない文字を全角に変換しています。
-			@SubTitles[elm[0]] = elm[1].tr('a-zA-Z!?:;/\|,*"><','ａ-ｚＡ-Ｚ！？：；／￥｜，＊')
+			elm[1] ||= ""
+			@SubTitles[elm[0]] = elm[1].tr(FILENAME_FROM, FILENAME_TO)
 		}
 	end
 	
